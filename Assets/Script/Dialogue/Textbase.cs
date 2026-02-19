@@ -4,8 +4,9 @@ using UnityEngine;
 using static DialogueData;
 using UnityEngine.UI;
 using System;
+[CreateAssetMenu(fileName = "NewQuestData", menuName = "MissionSystem/Textbase")]
 
-public class Textbase : MonoBehaviour
+public class Textbase : ScriptableObject
 { 
     
     [System.Serializable]

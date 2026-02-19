@@ -1,128 +1,172 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 
 public class StoryFlowController : MonoBehaviour
 {
-    // ‚§√ß √È“ß¢ÈÕ¡Ÿ≈ ”À√—∫ "·µË≈–¢—ÈπµÕπ" ¢Õß‡π◊ÈÕ‡√◊ËÕß
-    [System.Serializable]
-    public class StoryStep
-    {
-        public string stepName; // µ—Èß™◊ËÕ‰«ÈÕË“π‡Õß ‡™Ëπ "Intro", "Choice Phase"
-        public List<StoryOption> options; // √“¬°“√µ—«‡≈◊Õ°„π¢—Èππ’È
-    }
+    [Header("--- üé≠ ‡∏ï‡∏±‡∏ß‡∏•‡∏∞‡∏Ñ‡∏£‡∏ó‡∏µ‡πà‡∏Å‡∏≥‡∏•‡∏±‡∏á‡∏ó‡∏≥‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à ---")]
+    public CharacterData participatingCharacter;
 
-    [System.Serializable]
-    public class StoryOption
-    {
-        public string buttonText;     // ¢ÈÕ§«“¡∫πªÿË¡ (‡™Ëπ "‰ª∑“ß´È“¬", " ŸÈ‡≈¬")
-        public Textbase targetTextbase; // Textbase ∑’Ë®–‡≈Ëπ‡¡◊ËÕ‡≈◊Õ°¢ÈÕπ’È
-    }
+    [Header("--- üìú ‡∏Ñ‡∏±‡∏°‡∏†‡∏µ‡∏£‡πå‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à (Quest List) ---")]
+    public List<QuestData> questList; // ‡πÉ‡∏™‡πà‡πÄ‡∏Ñ‡∏ß‡∏™‡∏ó‡∏µ‡πà‡∏ï‡πâ‡∏≠‡∏á‡∏Å‡∏≤‡∏£‡πÉ‡∏´‡πâ‡∏£‡∏±‡∏ô‡πÄ‡∏õ‡πá‡∏ô‡∏Ñ‡∏¥‡∏ß‡∏ó‡∏µ‡πà‡∏ô‡∏µ‡πà
+    public int startQuestIndex = 0;   // ‡πÄ‡∏•‡∏∑‡∏≠‡∏Å‡∏ß‡πà‡∏≤‡∏à‡∏∞‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏£‡∏±‡∏ô‡∏à‡∏≤‡∏Å‡∏Ñ‡∏¥‡∏ß‡∏ó‡∏µ‡πà‡πÄ‡∏ó‡πà‡∏≤‡πÑ‡∏´‡∏£‡πà (‡∏Ñ‡πà‡∏≤‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô‡∏Ñ‡∏∑‡∏≠ 0 = ‡∏≠‡∏±‡∏ô‡πÅ‡∏£‡∏Å‡∏™‡∏∏‡∏î)
 
-    [Header("--- °“√µ—Èß§Ë“∫∑≈–§√ ---")]
-    public List<StoryStep> storyFlow; // ≈“° Textbase ¡“„ Ë‡√’¬ß≈”¥—∫∑’Ëπ’Ë (0, 1, 2...)
-
-    [Header("--- °“√‡™◊ËÕ¡µËÕ ---")]
+    [Header("--- References ---")]
     public DialogueManager dialogueManager;
-    public GameObject choicePanel;         // Panel ∑’Ë‡°Á∫ªÿË¡µ—«‡≈◊Õ°
-    public Transform buttonContainer;      // ®ÿ¥∑’Ë®–„ÀÈªÿË¡‰ª‡°‘¥ (Content À√◊Õ Panel)
-    public GameObject buttonPrefab;        // Prefab ¢ÕßªÿË¡ (µÈÕß¡’ Button ·≈– TextMeshProUGUI)
+    public GameObject choicePanel;
+    public Transform buttonContainer;
+    public GameObject buttonPrefab;
 
-    private int currentStepIndex = 0; // µ—«π—∫«Ë“µÕππ’ÈÕ¬ŸË¢—ÈπµÕπ‰Àπ·≈È«
+    // ‡∏ï‡∏±‡∏ß‡πÅ‡∏õ‡∏£‡∏ï‡∏¥‡∏î‡∏ï‡∏≤‡∏°‡∏™‡∏ñ‡∏≤‡∏ô‡∏∞‡∏õ‡∏±‡∏à‡∏à‡∏∏‡∏ö‡∏±‡∏ô
+    private int currentQuestIndex = 0;
+    private int currentStepIndex = 0;
+    private QuestData currentQuest;
 
     void Start()
     {
-        // ‡√‘Ë¡µÈπ∑’Ë¢—ÈπµÕπ·√° (Step 0)
-        currentStepIndex = 0;
-        ProcessCurrentStep();
-    }
+        if (participatingCharacter == null)
+            Debug.LogWarning("‚ö†Ô∏è ‡∏¢‡∏±‡∏á‡πÑ‡∏°‡πà‡∏°‡∏µ‡∏ï‡∏±‡∏ß‡∏•‡∏∞‡∏Ñ‡∏£‡∏ó‡∏≥‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à!");
 
-    // ø—ß°Ï™—π ¡Õß°≈: µ—¥ ‘π„®«Ë“®–∑”Õ–‰√„π¢—ÈπµÕππ’È
-    void ProcessCurrentStep()
-    {
-        // 1. ‡™Á§«Ë“‡π◊ÈÕ‡√◊ËÕß®∫À¡¥À√◊Õ¬—ß
-        if (currentStepIndex >= storyFlow.Count)
+        if (questList.Count == 0)
         {
-            Debug.Log("--- ®∫∫√‘∫Ÿ√≥Ï (End of Flow) ---");
-            // µ√ßπ’ÈÕ“®®– —Ëß„ÀÈª‘¥ UI À√◊Õ‚À≈¥ Scene „À¡Ë°Á‰¥È
+            Debug.LogError("‚ö†Ô∏è ‡∏Ñ‡∏±‡∏°‡∏†‡∏µ‡∏£‡πå‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à‡∏ß‡πà‡∏≤‡∏á‡πÄ‡∏õ‡∏•‡πà‡∏≤! ‡∏Å‡∏£‡∏∏‡∏ì‡∏≤‡πÉ‡∏™‡πà QuestData ‡∏•‡∏á‡πÉ‡∏ô Quest List ‡∏≠‡∏¢‡πà‡∏≤‡∏á‡∏ô‡πâ‡∏≠‡∏¢ 1 ‡∏≠‡∏±‡∏ô");
             return;
         }
 
-        // ¥÷ß¢ÈÕ¡Ÿ≈¢—ÈπµÕπª—®®ÿ∫—πÕÕ°¡“
-        StoryStep currentStep = storyFlow[currentStepIndex];
+        // ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏ï‡πâ‡∏ô‡πÄ‡∏Ñ‡∏ß‡∏™‡∏ï‡∏≤‡∏° Index ‡∏ó‡∏µ‡πà‡∏ô‡∏≤‡∏¢‡∏ó‡πà‡∏≤‡∏ô‡∏Å‡∏≥‡∏´‡∏ô‡∏î
+        StartQuest(startQuestIndex);
+    }
 
-        // 2. ‡™Á§®”π«πµ—«‡≈◊Õ°
+    // ‡∏ü‡∏±‡∏á‡∏Å‡πå‡∏ä‡∏±‡∏ô‡∏™‡∏±‡πà‡∏á‡πÄ‡∏£‡∏¥‡πà‡∏°‡πÄ‡∏Ñ‡∏ß‡∏™
+    public void StartQuest(int questIndex)
+    {
+        if (questIndex >= questList.Count)
+        {
+            Debug.Log("üéâ ‡∏à‡∏ö‡∏ó‡∏∏‡∏Å‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à‡πÉ‡∏ô‡∏Ñ‡∏•‡∏±‡∏á‡∏Ñ‡∏±‡∏°‡∏†‡∏µ‡∏£‡πå‡πÅ‡∏•‡πâ‡∏ß!");
+            return;
+        }
+
+        currentQuestIndex = questIndex;
+        currentQuest = questList[currentQuestIndex];
+        currentStepIndex = 0; // ‡∏£‡∏µ‡πÄ‡∏ã‡πá‡∏ï‡∏•‡∏≥‡∏î‡∏±‡∏ö‡πÄ‡∏´‡∏ï‡∏∏‡∏Å‡∏≤‡∏£‡∏ì‡πå‡πÉ‡∏´‡πâ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏à‡∏≤‡∏Å 0 ‡πÉ‡∏´‡∏°‡πà
+
+        Debug.Log($"‚öîÔ∏è ‡πÄ‡∏£‡∏¥‡πà‡∏°‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à: {currentQuest.questName}");
+        ProcessCurrentStep();
+    }
+
+    void ProcessCurrentStep()
+    {
+        // 1. ‡πÄ‡∏ä‡πá‡∏Ñ‡∏ß‡πà‡∏≤‡∏à‡∏ö "‡πÄ‡∏Ñ‡∏ß‡∏™‡∏õ‡∏±‡∏à‡∏à‡∏∏‡∏ö‡∏±‡∏ô" ‡∏´‡∏£‡∏∑‡∏≠‡∏¢‡∏±‡∏á?
+        if (currentStepIndex >= currentQuest.storyFlow.Count)
+        {
+            Debug.Log($"‚úÖ ‡∏à‡∏ö‡∏†‡∏≤‡∏£‡∏Å‡∏¥‡∏à: {currentQuest.questName}");
+            // ‡∏Ç‡∏¢‡∏±‡∏ö‡πÑ‡∏õ‡∏ó‡∏≥‡πÄ‡∏Ñ‡∏ß‡∏™‡∏•‡∏≥‡∏î‡∏±‡∏ö‡∏ñ‡∏±‡∏î‡πÑ‡∏õ‡πÉ‡∏ô List ‡∏ó‡∏±‡∏ô‡∏ó‡∏µ
+            StartQuest(currentQuestIndex + 1);
+            return;
+        }
+
+        StoryStep currentStep = currentQuest.storyFlow[currentStepIndex];
+
+        // 2. ‡∏î‡∏≥‡πÄ‡∏ô‡∏¥‡∏ô‡∏Å‡∏≤‡∏£‡∏ï‡∏≤‡∏°‡∏ï‡∏±‡∏ß‡πÄ‡∏•‡∏∑‡∏≠‡∏Å
         if (currentStep.options.Count == 0)
         {
-            Debug.LogWarning($"¢—ÈπµÕπ {currentStep.stepName} ‰¡Ë¡’ Textbase „ Ë‰«È‡≈¬! ¢È“¡‰ª¢—Èπ∂—¥‰ª");
             GoToNextStep();
         }
         else if (currentStep.options.Count == 1)
         {
-            // === °√≥’¡’ 1 Õ—π: ‡≈ËπÕ—µ‚π¡—µ‘ (Auto Play) ===
-            choicePanel.SetActive(false); // ´ËÕπªÿË¡
+            choicePanel.SetActive(false);
+            GiveReward(currentStep.options[0].rewardGold);
             PlaySpecificTextbase(currentStep.options[0].targetTextbase);
         }
         else
         {
-            // === °√≥’¡’À≈“¬Õ—π: · ¥ßªÿË¡µ—«‡≈◊Õ° (Choice Phase) ===
             ShowChoiceButtons(currentStep.options);
         }
     }
 
-    // ø—ß°Ï™—π √È“ßªÿË¡
     void ShowChoiceButtons(List<StoryOption> options)
     {
-        choicePanel.SetActive(true); // ‡ª‘¥ÀπÈ“µË“ß‡≈◊Õ°
-
-        // ≈È“ßªÿË¡‡°Ë“∑‘Èß°ËÕπ
+        choicePanel.SetActive(true);
         foreach (Transform child in buttonContainer) Destroy(child.gameObject);
 
-        //  √È“ßªÿË¡„À¡Ëµ“¡®”π«πµ—«‡≈◊Õ°
         foreach (var option in options)
         {
-            Debug.Log("Instantiate(buttonPrefab");
+            GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
+            Button btn = btnObj.GetComponent<Button>();
+            TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
+            Image btnImage = btnObj.GetComponent<Image>();
 
-            GameObject btn = Instantiate(buttonPrefab, buttonContainer);
-
-            // µ—Èß™◊ËÕªÿË¡
-            var txt = btn.GetComponentInChildren<TextMeshProUGUI>();
             if (txt != null) txt.text = option.buttonText;
 
-            // Ω—ß§” —Ëß‡¡◊ËÕ°¥ªÿË¡
-            btn.GetComponent<Button>().onClick.AddListener(() =>
+            // --- ‡∏ï‡∏£‡∏ß‡∏à‡∏™‡∏≠‡∏ö‡πÄ‡∏á‡∏∑‡πà‡∏≠‡∏ô‡πÑ‡∏Ç‡∏ï‡∏±‡∏ß‡∏•‡∏∞‡∏Ñ‡∏£ ---
+            bool passCondition = true;
+            string reason = "";
+
+            if (participatingCharacter != null)
             {
-                choicePanel.SetActive(false); // ª‘¥ÀπÈ“µË“ß‡≈◊Õ°
-                PlaySpecificTextbase(option.targetTextbase); // ‡≈Ëπ Textbase ∑’Ë‡≈◊Õ°
-            });
+                if (participatingCharacter.HP < option.reqHP) { passCondition = false; reason += "(HP ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.VIT < option.reqVIT) { passCondition = false; reason += "(VIT ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.STR < option.reqSTR) { passCondition = false; reason += "(STR ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.DEX < option.reqDEX) { passCondition = false; reason += "(DEX ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.INT < option.reqINT) { passCondition = false; reason += "(INT ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.CHA < option.reqCHA) { passCondition = false; reason += "(CHA ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+                if (participatingCharacter.LUCK < option.reqLUCK) { passCondition = false; reason += "(LUCK ‡πÑ‡∏°‡πà‡∏û‡∏≠) "; }
+
+                if (!string.IsNullOrEmpty(option.skillNeed) && !participatingCharacter.HasSkill(option.skillNeed))
+                {
+                    passCondition = false;
+                    reason += $"(‡∏Ç‡∏≤‡∏î‡∏™‡∏Å‡∏¥‡∏• {option.skillNeed})";
+                }
+            }
+            else
+            {
+                passCondition = false;
+                reason = "(‡πÑ‡∏°‡πà‡∏û‡∏ö‡∏ï‡∏±‡∏ß‡∏•‡∏∞‡∏Ñ‡∏£)";
+            }
+
+            // --- ‡πÅ‡∏™‡∏î‡∏á‡∏õ‡∏∏‡πà‡∏° ---
+            if (passCondition)
+            {
+                btn.interactable = true;
+                btnImage.color = Color.white;
+                btn.onClick.AddListener(() =>
+                {
+                    choicePanel.SetActive(false);
+                    GiveReward(option.rewardGold);
+                    PlaySpecificTextbase(option.targetTextbase);
+                });
+            }
+            else
+            {
+                btn.interactable = false;
+                btnImage.color = Color.red;
+                if (txt != null) txt.text += $" <size=80%><color=yellow>{reason}</color></size>";
+            }
         }
     }
 
-    // ø—ß°Ï™—π —Ëß„ÀÈ DialogueManager ∑”ß“π
+    void GiveReward(int amount)
+    {
+        if (amount > 0 && ResourceManager.Instance != null)
+        {
+            ResourceManager.Instance.AddGold(amount);
+        }
+    }
+
     void PlaySpecificTextbase(Textbase textbaseToPlay)
     {
-        if (textbaseToPlay == null)
-        {
-            Debug.LogError("Textbase ‡ªÁπ Null! °√ÿ≥“≈“°„ Ë„π Inspector");
-            return;
-        }
-
-        // 1. ¬—¥¢ÈÕ¡Ÿ≈ Textbase „À¡Ë„ Ë DialogueManager
+        if (textbaseToPlay == null) return;
         dialogueManager.textbase = textbaseToPlay;
         dialogueManager.currentLineIndex = 0;
-        Debug.LogError("Textbase ‡ª≈Ë¬π∑”ß“π");
-        // 2. *** À—«„® ”§—≠ ***  —Ëß«Ë“ "∂È“§ÿ¬®∫ „ÀÈ°≈—∫¡“‡√’¬°ø—ß°Ï™—π GoToNextStep ¢Õß©—ππ–"
-        dialogueManager.onDialogueFinished = GoToNextStep;
-
-        // 3. ‡√‘Ë¡§ÿ¬
+        dialogueManager.onDialogueFinished = GoToNextStep; // ‡∏ö‡∏≠‡∏Å‡∏ß‡πà‡∏≤‡∏ñ‡πâ‡∏≤‡∏à‡∏ö Text ‡πÉ‡∏´‡πâ‡πÄ‡∏£‡∏µ‡∏¢‡∏Å‡∏Å‡πâ‡∏≤‡∏ß‡∏ï‡πà‡∏≠‡πÑ‡∏õ
         dialogueManager.ShowCurrentLine();
     }
 
-    // ø—ß°Ï™—π¢È“¡‰ª¢—Èπ∂—¥‰ª
+    // ‡∏Å‡πâ‡∏≤‡∏ß‡πÑ‡∏õ‡∏¢‡∏±‡∏á‡πÄ‡∏´‡∏ï‡∏∏‡∏Å‡∏≤‡∏£‡∏ì‡πå‡∏ï‡πà‡∏≠‡πÑ‡∏õ "‡πÉ‡∏ô‡πÄ‡∏Ñ‡∏ß‡∏™‡∏õ‡∏±‡∏à‡∏à‡∏∏‡∏ö‡∏±‡∏ô"
     void GoToNextStep()
     {
-        currentStepIndex++; // ‡æ‘Ë¡‡≈¢¢—ÈπµÕπ
-        ProcessCurrentStep(); // «π≈Ÿª°≈—∫‰ªµ—¥ ‘π„®„À¡Ë
+        currentStepIndex++;
+        ProcessCurrentStep();
     }
 }

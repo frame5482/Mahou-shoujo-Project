@@ -671,6 +671,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 445827863}
+    - targetCorrespondingSourceObject: {fileID: 7441301111762888447, guid: f503ade945681684988b253d9580107e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1211133784}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f503ade945681684988b253d9580107e, type: 3}
 --- !u!114 &797380188 stripped
@@ -873,6 +877,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1120694617
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1120694618}
+  - component: {fileID: 1120694619}
+  m_Layer: 0
+  m_Name: Player
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1120694618
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1120694617}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2004.5793, y: 978.479, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1120694619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1120694617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 771bdc0c5a5435147bfee650c233923f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ResourceManager
+  currentGold: 0
+  goldText: {fileID: 0}
 --- !u!224 &1171944936 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7441301111762888447, guid: f503ade945681684988b253d9580107e,
@@ -890,7 +940,7 @@ GameObject:
   - component: {fileID: 1211133784}
   - component: {fileID: 1211133783}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: StoryFlowController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -908,19 +958,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c26f8257a7eba14aaf8be46439eb792, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoryFlowController
-  storyFlow:
-  - stepName: sd
-    options:
-    - buttonText: dsad
-      targetTextbase: {fileID: 2095259606}
-  - stepName: dsad
-    options:
-    - buttonText: XX
-      targetTextbase: {fileID: 1522805466}
-    - buttonText: AA
-      targetTextbase: {fileID: 1649713708}
-  - stepName: 
-    options: []
+  participatingCharacter: {fileID: 11400000, guid: 0ad97346535f5aa4d8a6bfb5d19ad2f7,
+    type: 2}
+  questList:
+  - {fileID: 11400000, guid: 5218fdea9379f5040a72a3c940bdf6c9, type: 2}
+  startQuestIndex: 0
   dialogueManager: {fileID: 797380188}
   choicePanel: {fileID: 445827862}
   buttonContainer: {fileID: 949112733}
@@ -934,12 +976,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1211133782}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1198.6932, y: 627.2219, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -721.30676, y: -452.77808, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1171944936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1522805464
 GameObject:
@@ -1193,4 +1235,4 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 797380186}
   - {fileID: 1058077551}
-  - {fileID: 1211133784}
+  - {fileID: 1120694618}
