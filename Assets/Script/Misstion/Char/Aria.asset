@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ecb9bc381a99adc49b79c922334d57ee, type: 3}
-  m_Name: NewCharacter
+  m_Name: Aria
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   characterName: AA
-  portrait: {fileID: 0}
+  portrait: {fileID: 21300000, guid: c4366b5c4aa57e249839d8b0622823cf, type: 3}
   HP: 10
   VIT: 10
   STR: 10
