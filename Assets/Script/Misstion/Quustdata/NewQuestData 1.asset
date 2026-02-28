@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestData
   questName: 
   questDescription: ADASDASdad
+  questType: 0
   storyFlow:
   - stepName: dsaadsad
     options:
@@ -52,3 +53,10 @@ MonoBehaviour:
       reqCHA: 0
       reqLUCK: 0
       skillNeed: 
+  battleConfig:
+    battleSceneName: BattleArena_Forest
+    rewardGold: 0
+    monsterSpawns:
+    - monsterPrefab: {fileID: 0}
+      amount: 0
+      spawnPointIndex: 0

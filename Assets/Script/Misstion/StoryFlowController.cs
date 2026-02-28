@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 using System.Collections.Generic;
@@ -240,4 +240,13 @@ public class StoryFlowController : MonoBehaviour
             return activeQuestList[index];
         return null;
     }
+
+    // ========== สำหรับ GameSaveManager: อ่าน/เขียนสถานะความคืบหน้าเนื้อเรื่อง ==========
+    public string GetParticipatingCharacterName()
+    {
+        return participatingCharacter != null ? participatingCharacter.characterName : "";
+    }
+
+    public int GetCurrentQuestIndex() => currentQuestIndex;
+    public int GetCurrentStepIndex() => currentStepIndex;
 }
