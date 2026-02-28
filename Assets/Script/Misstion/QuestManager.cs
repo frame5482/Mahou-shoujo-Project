@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
@@ -17,6 +17,11 @@ public class QuestManager : MonoBehaviour
     public List<CharacterData> availableCharacters; // รายชื่อตัวละครที่มีในค่าย
     public Transform characterButtonContainer; // จุดที่ปุ่มจะไปเกิด (ใส่ Vertical/Horizontal Layout ไว้)
     public GameObject characterButtonPrefab; // Prefab ของปุ่ม (ต้องมี Image เพื่อใส่รูปหน้า)
+
+    [Header("--- ✨ อนิเมชันปุ่มตัวละคร ---")]
+    public QuestButtonAnimation buttonAnimation; // สคริปต์จัดการอนิเมชัน
+    [Tooltip("ขนาดปุ่ม (ถ้าเป็น 0 จะใช้ขนาดจากรูปภาพ)")]
+    public float buttonSize = 200f;
 
     void Start()
     {
@@ -46,16 +51,48 @@ public class QuestManager : MonoBehaviour
 
         foreach (Transform child in characterButtonContainer) Destroy(child.gameObject);
 
+        int buttonIndex = 0;
         foreach (var character in availableCharacters)
         {
             GameObject btnObj = Instantiate(characterButtonPrefab, characterButtonContainer);
             Button btn = btnObj.GetComponent<Button>();
+            RectTransform rectTransform = btnObj.GetComponent<RectTransform>();
 
-            // 🖼️ เอารูป Portrait จาก CharacterData มาใส่ในปุ่ม
+            // 🔲 ตั้งขนาดปุ่มให้เป็นสัดส่วน (ไม่ให้ยืด)
+            float targetSize = buttonSize;
+            if (targetSize <= 0 && character.portrait != null)
+            {
+                // ถ้าไม่ได้ตั้งขนาด ให้ใช้ขนาดจากรูปภาพ
+                targetSize = Mathf.Max(character.portrait.rect.width, character.portrait.rect.height);
+            }
+            if (targetSize > 0)
+            {
+                rectTransform.sizeDelta = new Vector2(targetSize, targetSize);
+                
+                // เพิ่ม LayoutElement เพื่อป้องกันการยืดจาก Layout Group
+                UnityEngine.UI.LayoutElement layoutElement = btnObj.GetComponent<UnityEngine.UI.LayoutElement>();
+                if (layoutElement == null)
+                {
+                    layoutElement = btnObj.AddComponent<UnityEngine.UI.LayoutElement>();
+                }
+                layoutElement.preferredWidth = targetSize;
+                layoutElement.preferredHeight = targetSize;
+                layoutElement.flexibleWidth = 0;
+                layoutElement.flexibleHeight = 0;
+            }
+
+            // 🖼️ เอารูป Portrait จาก CharacterData มาใส่ในปุ่ม (ไม่ให้ยืด)
             Image btnImage = btnObj.GetComponent<Image>();
             if (character.portrait != null && btnImage != null)
             {
                 btnImage.sprite = character.portrait;
+                btnImage.preserveAspect = true; // รักษาอัตราส่วน ไม่ให้รูปยืด
+            }
+            // ถ้ารูปอยู่ที่ child Image (เช่นใต้ปุ่ม) ให้ preserve aspect ด้วย
+            Image childImage = btnObj.GetComponentInChildren<Image>(true);
+            if (childImage != null && childImage != btnImage)
+            {
+                childImage.preserveAspect = true;
             }
 
             // (Optional) ถ้าปุ่มมี Text ก็ใส่ชื่อกำกับไว้ด้วย
@@ -65,8 +102,23 @@ public class QuestManager : MonoBehaviour
             // ฝังคำสั่งเมื่อนายท่านกดปุ่มตัวละครนี้!
             btn.onClick.AddListener(() =>
             {
-                OnCharacterSelected(character);
+                if (buttonAnimation != null)
+                {
+                    buttonAnimation.PlayCharacterSendAnimation(btnObj, character, OnCharacterSelected, characterSelectionPanel);
+                }
+                else
+                {
+                    // ถ้าไม่มี Animation component ให้เรียก OnCharacterSelected โดยตรง
+                    OnCharacterSelected(character);
+                }
             });
+
+            // ✨ เริ่มอนิเมชันเมื่อปุ่มปรากฏ (แต่ละปุ่มมี delay เล็กน้อยเพื่อให้ดูสวยงาม)
+            if (buttonAnimation != null)
+            {
+                buttonAnimation.PlayButtonAppearAnimation(btnObj, buttonIndex * 0.05f);
+            }
+            buttonIndex++;
         }
     }
 
@@ -88,11 +140,12 @@ public class QuestManager : MonoBehaviour
         }
 
         // 4. ปิดหน้าต่างเลือกตัวละคร
-        characterSelectionPanel.SetActive(false);
+       /// characterSelectionPanel.SetActive(false);
 
         // 5. สั่งลุยภารกิจ!
         storyFlowController.StartQuest(currentGlobalQuestIndex);
     }
+
 
     // ฟังก์ชันนี้เรียกใช้เมื่อเควสจบ (เพื่อให้ขยับไปเควสถัดไป)
     public void OnQuestCompleted()
