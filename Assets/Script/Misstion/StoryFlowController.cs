@@ -30,6 +30,7 @@ public class StoryFlowController : MonoBehaviour
 
     // ตัวแปรติดตามสถานะปัจจุบัน
     private List<QuestData> activeQuestList;
+    private List<QuestData> _injectedQuestList; // รายการเควสที่ส่งมาจาก QuestManager (ตามบทใน GlobalQuestState)
     private int currentQuestIndex = 0;
     private int currentStepIndex = 0;
     private QuestData currentQuest;
@@ -40,11 +41,12 @@ public class StoryFlowController : MonoBehaviour
         // มันจะหลับใหลจนกว่า QuestManager จะเป็นคนปลุกขึ้นมาสั่งการ!
     }
 
-    // QuestManager จะเรียกฟังก์ชันนี้เมื่อผู้เล่นจิ้มเลือกตัวละคร
-    public void SetCharacter(CharacterData newChar)
+    /// <summary> ใส่ defaultQuestListForChapter = รายการเควสของบทปัจจุบัน (จาก StoryProgressData + GlobalQuestState) </summary>
+    public void SetCharacter(CharacterData newChar, List<QuestData> defaultQuestListForChapter = null)
     {
+        _injectedQuestList = defaultQuestListForChapter;
         participatingCharacter = newChar;
-        PrepareQuestRoute(); // คำนวณหาเส้นทางเควสทันทีที่ได้ตัวละครมา
+        PrepareQuestRoute();
     }
 
     // 🌟 ระบบลำดับความสำคัญ: หาว่าต้องใช้คัมภีร์ชุดไหน 🌟
@@ -53,13 +55,13 @@ public class StoryFlowController : MonoBehaviour
         bool isSecretRouteFound = false;
 
         // 1. ค้นหาเส้นทางลับก่อนเสมอ
-        if (participatingCharacter != null && characterRoutes.Count > 0)
+        if (participatingCharacter != null && characterRoutes != null && characterRoutes.Count > 0)
         {
             foreach (var route in characterRoutes)
             {
-                if (route.targetCharacter == participatingCharacter)
+                if (route.targetCharacter == participatingCharacter && route.exclusiveQuestList != null && route.exclusiveQuestList.Count > 0)
                 {
-                    activeQuestList = route.exclusiveQuestList;
+                    activeQuestList = new List<QuestData>(route.exclusiveQuestList);
                     isSecretRouteFound = true;
                     Debug.Log($"✨ [StoryFlow] ประตูมิติเปิดออก! โหลดเส้นทางลับของ: {participatingCharacter.characterName}");
                     break;
@@ -67,11 +69,19 @@ public class StoryFlowController : MonoBehaviour
             }
         }
 
-        // 2. ถ้าไม่มีเส้นทางลับ ให้เดินตามเส้นทางปกติของสามัญชน
+        // 2. ถ้าไม่มีเส้นทางลับ ใช้รายการที่ส่งมา (บทปัจจุบัน) หรือ defaultQuestList
         if (!isSecretRouteFound)
         {
-            activeQuestList = defaultQuestList;
-            Debug.Log("🚶 [StoryFlow] ไม่พบเงื่อนไขตัวละครลับ โหลดเส้นทางปกติ (Default Route)");
+            if (_injectedQuestList != null && _injectedQuestList.Count > 0)
+            {
+                activeQuestList = new List<QuestData>(_injectedQuestList);
+                Debug.Log("🚶 [StoryFlow] โหลดเส้นทางตามบทใน GlobalQuestState");
+            }
+            else
+            {
+                activeQuestList = defaultQuestList != null ? new List<QuestData>(defaultQuestList) : new List<QuestData>();
+                Debug.Log("🚶 [StoryFlow] โหลดเส้นทางปกติ (Default Quest List)");
+            }
         }
     }
 
@@ -147,7 +157,7 @@ public class StoryFlowController : MonoBehaviour
             TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
             Image btnImage = btnObj.GetComponent<Image>();
 
-            if (txt != null) txt.text = option.buttonText;
+            if (txt != null) { txt.text = option.buttonText; GlobalQuestState.ApplyLanguageFont(txt); }
 
             bool passCondition = true;
             string reason = "";
@@ -191,7 +201,7 @@ public class StoryFlowController : MonoBehaviour
             {
                 btn.interactable = false;
                 btnImage.color = Color.red;
-                if (txt != null) txt.text += $" <size=80%><color=yellow>{reason}</color></size>";
+                if (txt != null) { txt.text += $" <size=80%><color=yellow>{reason}</color></size>"; GlobalQuestState.ApplyLanguageFont(txt); }
             }
         }
     }
@@ -229,6 +239,8 @@ public class StoryFlowController : MonoBehaviour
 
     public QuestData GetDefaultQuest(int index)
     {
+        if (_injectedQuestList != null && index >= 0 && index < _injectedQuestList.Count)
+            return _injectedQuestList[index];
         if (defaultQuestList != null && index < defaultQuestList.Count)
             return defaultQuestList[index];
         return null;

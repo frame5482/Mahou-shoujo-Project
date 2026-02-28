@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TMPro;
 
 public class ObjectInteractable : MonoBehaviour
@@ -29,6 +29,7 @@ public class ObjectInteractable : MonoBehaviour
         if (promptTextUI != null)
         {
             promptTextUI.text = interactMessage;
+            GlobalQuestState.ApplyLanguageFont(promptTextUI);
             promptTextUI.gameObject.SetActive(true);
         }
     }

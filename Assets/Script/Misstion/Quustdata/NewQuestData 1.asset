@@ -12,24 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4fb7ba7d0cadf545b94d17e2627777f, type: 3}
   m_Name: NewQuestData 1
   m_EditorClassIdentifier: Assembly-CSharp::QuestData
-  questName: 
-  questDescription: ADASDASdad
+  questName: AAA
+  questDescription: AAAAAAAAAAAAAAA
   questType: 0
   storyFlow:
-  - stepName: dsaadsad
-    options:
-    - buttonText: 
-      targetTextbase: {fileID: 11400000, guid: 5a30d8f944bcc5e44bfe6065db826606, type: 2}
-      rewardGold: 0
-      reqHP: 0
-      reqVIT: 0
-      reqSTR: 0
-      reqDEX: 0
-      reqINT: 0
-      reqCHA: 0
-      reqLUCK: 0
-      skillNeed: 
-  - stepName: 
+  - stepName: AAAAAA
     options:
     - buttonText: ASAAAAAA
       targetTextbase: {fileID: 11400000, guid: 96a9df25b3beddf4a8f452194e0bbb45, type: 2}

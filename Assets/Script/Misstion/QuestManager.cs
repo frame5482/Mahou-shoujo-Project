@@ -10,9 +10,13 @@ public class QuestManager : MonoBehaviour
     [Tooltip("ใช้เมื่อเควสเป็นประเภท Battle (ต่อสู้)")]
     public BattleQuestController battleQuestController;
 
-    [Header("--- 📜 สถานะภารกิจปัจจุบัน ---")]
-    public int currentGlobalQuestIndex = 0; // ตอนนี้อยู่ภารกิจลำดับที่เท่าไหร่
-    public TextMeshProUGUI questDescriptionText; // ช่องซ้ายสำหรับโชว์รายละเอียดภารกิจ
+    [Header("--- 📜 ความคืบหน้าเนื้อเรื่อง (เลข 1 = บทที่ 1) ---")]
+    [Tooltip("ใส่ StoryProgressData ที่เก็บแบบ CharacterQuestRoute แล้วใช้เลขใน GlobalQuestState เลือกบท")]
+    public StoryProgressData storyProgressData;
+
+    [Header("--- 📜 สถานะภารกิจ (เมื่อไม่ใช้ storyProgressData) ---")]
+    public int currentGlobalQuestIndex = 0;
+    public TextMeshProUGUI questDescriptionText;
 
     [Header("--- 🎭 ระบบคัดเลือกตัวละคร ---")]
     public GameObject characterSelectionPanel; // หน้าต่างหรือ Panel ที่ครอบปุ่มเลือกตัวละครไว้
@@ -27,22 +31,58 @@ public class QuestManager : MonoBehaviour
 
     void Start()
     {
-        // เริ่มเกมมา ให้เปิดหน้าต่างเลือกตัวละคร
+        GlobalQuestState.LoadState(); // ดึงที่เซฟไว้มาบอกว่าตอนนี้อยู่บทไหน เควสที่เท่าไหร่
         OpenQuestBoard();
+    }
+
+    bool UseStoryProgress() => storyProgressData != null && storyProgressData.routes != null && storyProgressData.routes.Count > 0;
+
+    /// <summary> ดึงรายการเควสของบทปัจจุบัน (บทที่ 1 = routes[0], ...) </summary>
+    List<QuestData> GetCurrentChapterQuestList()
+    {
+        if (!UseStoryProgress()) return null;
+        int ch = GlobalQuestState.CurrentChapter - 1;
+        if (ch < 0 || ch >= storyProgressData.routes.Count) return null;
+        var route = storyProgressData.routes[ch];
+        if (route?.exclusiveQuestList == null) return null;
+        return new List<QuestData>(route.exclusiveQuestList);
+    }
+
+    /// <summary> ดึงรายการเควสของตัวละครที่เลือก (จาก StoryProgressData.routes ที่ targetCharacter ตรง) </summary>
+    List<QuestData> GetQuestListForCharacter(CharacterData character)
+    {
+        if (!UseStoryProgress() || character == null) return null;
+        foreach (var route in storyProgressData.routes)
+        {
+            if (route != null && route.targetCharacter == character && route.exclusiveQuestList != null)
+                return new List<QuestData>(route.exclusiveQuestList);
+        }
+        return null;
+    }
+
+    QuestData GetQuestAtCurrentPosition()
+    {
+        var list = GetCurrentChapterQuestList();
+        int idx = GlobalQuestState.CurrentQuestIndex;
+        if (list == null || idx < 0 || idx >= list.Count) return null;
+        return list[idx];
+    }
+
+    int GetCurrentQuestIndex()
+    {
+        if (UseStoryProgress()) return GlobalQuestState.CurrentQuestIndex;
+        return currentGlobalQuestIndex;
     }
 
     public void OpenQuestBoard()
     {
         characterSelectionPanel.SetActive(true);
 
-        // ดึงรายละเอียดเควส "แบบปกติ" (Default) มาโชว์เป็นน้ำจิ้มก่อนเลือกตัวละคร
-        QuestData previewQuest = storyFlowController.GetDefaultQuest(currentGlobalQuestIndex);
+        QuestData previewQuest = UseStoryProgress() ? GetQuestAtCurrentPosition() : storyFlowController.GetDefaultQuest(currentGlobalQuestIndex);
         if (previewQuest != null)
-        {
             questDescriptionText.text = previewQuest.questDescription;
-        }
+        GlobalQuestState.ApplyLanguageFont(questDescriptionText);
         print("GenerateCharacterButtons");
-        // สร้างปุ่มเลือกตัวละคร
         GenerateCharacterButtons();
     }
 
@@ -99,7 +139,7 @@ public class QuestManager : MonoBehaviour
 
             // (Optional) ถ้าปุ่มมี Text ก็ใส่ชื่อกำกับไว้ด้วย
             TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = character.characterName;
+            if (txt != null) { txt.text = character.characterName; GlobalQuestState.ApplyLanguageFont(txt); }
 
             // ฝังคำสั่งเมื่อนายท่านกดปุ่มตัวละครนี้!
             btn.onClick.AddListener(() =>
@@ -130,16 +170,23 @@ public class QuestManager : MonoBehaviour
     {
         Debug.Log($"[QuestManager] ตัดสินใจส่ง: {selectedChar.characterName} เข้าสู่สนามรบ!");
 
-        // 1. ส่งตัวละครไปให้ StoryFlow ประมวลผลเส้นทาง 
-        storyFlowController.SetCharacter(selectedChar);
+        // ส่งรายการเควสของตัวละครที่เลือก (จาก StoryProgressData) เพื่อให้ข้อความเควสเปลี่ยนตามตัวละคร
+        var questList = UseStoryProgress() ? GetQuestListForCharacter(selectedChar) : null;
+        if (questList == null && UseStoryProgress())
+            questList = GetCurrentChapterQuestList(); // ถ้าไม่มี route ตรงตัวละคร ใช้บทปัจจุบัน
+        storyFlowController.SetCharacter(selectedChar, questList);
 
-        // 2. ดึงเควสที่ "จะทำงานจริงๆ" ออกมา 
-        QuestData activeQuest = storyFlowController.GetActiveQuest(currentGlobalQuestIndex);
+        int index = GetCurrentQuestIndex();
+        QuestData activeQuest = storyFlowController.GetActiveQuest(index);
 
-        if (activeQuest != null)
+        // อัปเดตข้อความเควสจากรายการที่ส่งไป (หรือจาก activeQuest) ให้เปลี่ยนเมื่อเลือกตัวละคร
+        if (questDescriptionText != null)
         {
-            // 3. อัปเดตช่องรายละเอียดเควสด้านซ้าย
-            questDescriptionText.text = activeQuest.questDescription;
+            if (questList != null && index >= 0 && index < questList.Count)
+                questDescriptionText.text = questList[index].questDescription;
+            else if (activeQuest != null)
+                questDescriptionText.text = activeQuest.questDescription;
+            GlobalQuestState.ApplyLanguageFont(questDescriptionText);
         }
 
         // 5. เลือกประเภทเควส: เรื่องราว หรือ ต่อสู้ (ฉบับข้ามมิติ!)
@@ -164,16 +211,32 @@ public class QuestManager : MonoBehaviour
         }
         else
         {
-            // ถ้าเป็นเควสเนื้อเรื่อง ก็เล่นในฉากนี้ตามปกติ
-            storyFlowController.StartQuest(currentGlobalQuestIndex);
+            storyFlowController.StartQuest(index);
         }
     }
 
-
-    // ฟังก์ชันนี้เรียกใช้เมื่อเควสจบ (เพื่อให้ขยับไปเควสถัดไป)
     public void OnQuestCompleted()
     {
-        currentGlobalQuestIndex++; // ขยับเลขลำดับเควส
-        OpenQuestBoard(); // เปิดหน้าต่างเลือกตัวละครสำหรับเควสต่อไป
+        if (UseStoryProgress())
+        {
+            var list = GetCurrentChapterQuestList();
+            if (list != null && GlobalQuestState.CurrentQuestIndex < list.Count - 1)
+            {
+                GlobalQuestState.CurrentQuestIndex++;
+            }
+            else
+            {
+                GlobalQuestState.CurrentChapter++;
+                GlobalQuestState.CurrentQuestIndex = 0;
+                int maxCh = storyProgressData.routes != null ? storyProgressData.routes.Count : 1;
+                GlobalQuestState.CurrentChapter = Mathf.Clamp(GlobalQuestState.CurrentChapter, 1, maxCh);
+            }
+            GlobalQuestState.SaveState();
+        }
+        else
+        {
+            currentGlobalQuestIndex++;
+        }
+        OpenQuestBoard();
     }
 }

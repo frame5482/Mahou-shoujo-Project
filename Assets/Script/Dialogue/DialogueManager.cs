@@ -29,9 +29,8 @@ public class DialogueManager : MonoBehaviour
     public Textbase textbase;
 
 
-    private static readonly string SetLanguage = "PlayerPrefsSetLanguage";
-    public int SetintLanguage;
     public enum Language { ENG, THAI, JP }
+    /// <summary> ?????? GlobalQuestState.CurrentLanguage (0=ENG, 1=THAI, 2=JP) </summary>
     public Language currentLanguage = Language.THAI;
 
     public int currentLineIndex = 0;
@@ -65,7 +64,7 @@ public class DialogueManager : MonoBehaviour
         ThaiGameObject = ThaidialogueText.gameObject;
         ENGGameObject = ENGdialogueText.gameObject;
     }
-    // 2. แก้ไขฟังก์ชัน OnNextButtonPressed ดังนี้
+    // 2. ??? OnNextButtonPressed ?
 
     public void OnNextButtonPressed()
     {
@@ -77,21 +76,21 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            // --- แก้ไขตรงนี้ ---
-            // เช็คว่ามีใครรอฟังผลตอนจบไหม (เช่น ระบบ StoryFlowController)
+            // --- ?็ ---
+            // ???? ( ? StoryFlowController)
             if (onDialogueFinished != null)
             {
-                // แจ้งเตือนคนคุมว่า "จบแล้ว!"
+                // ? "!"
                 onDialogueFinished.Invoke();
 
-                // ล้างค่าทิ้ง เพื่อไม่ให้จำค่าเดิมไปใช้กับบทสนทนาอื่น
+                // ?? ???
                 onDialogueFinished = null;
                 Debug.Log("chane of Dialogu");
 
             }
             else
             {
-                // ถ้าไม่มีใครคุม (เล่นแบบปกติ) ก็ให้โหลด Scene หรือทำอย่างอื่นตามเดิม
+                // ไ (?) ? Scene ???
                 LoadScene();
                 Debug.Log("End of Dialogue (Default behavior)");
             }
@@ -144,33 +143,35 @@ public class DialogueManager : MonoBehaviour
 
     }
 
+    /// <summary> ??????????? GlobalQuestState ????????? GameObject + ????? </summary>
     public void Language_setting()
     {
-        SetintLanguage = PlayerPrefs.GetInt(SetLanguage);
-        if (SetintLanguage == 0)
+        int lang = GlobalQuestState.CurrentLanguage;
+        if (lang == 0)
         {
             currentLanguage = Language.ENG;
-            ThaiGameObject.SetActive(false);
-            ENGGameObject.SetActive(true);
-            JPGameObject.SetActive(false);
-
+            if (ThaiGameObject != null) ThaiGameObject.SetActive(false);
+            if (ENGGameObject != null) ENGGameObject.SetActive(true);
+            if (JPGameObject != null) JPGameObject.SetActive(false);
+            GlobalQuestState.ApplyLanguageFont(ENGdialogueText);
         }
-        else if (SetintLanguage == 1)
+        else if (lang == 1)
         {
             currentLanguage = Language.THAI;
-            ThaiGameObject.SetActive(true);
-            ENGGameObject.SetActive(false);
-            JPGameObject.SetActive(false);
-
+            if (ThaiGameObject != null) ThaiGameObject.SetActive(true);
+            if (ENGGameObject != null) ENGGameObject.SetActive(false);
+            if (JPGameObject != null) JPGameObject.SetActive(false);
+            GlobalQuestState.ApplyLanguageFont(ThaidialogueText);
         }
-        if (SetintLanguage == 2)
+        else if (lang == 2)
         {
             currentLanguage = Language.JP;
-            ThaiGameObject.SetActive(false);
-            ENGGameObject.SetActive(false);
-            JPGameObject.SetActive(true);
+            if (ThaiGameObject != null) ThaiGameObject.SetActive(false);
+            if (ENGGameObject != null) ENGGameObject.SetActive(false);
+            if (JPGameObject != null) JPGameObject.SetActive(true);
+            GlobalQuestState.ApplyLanguageFont(JPdialogueText);
         }
-
+        GlobalQuestState.ApplyLanguageFont(speakerNameText);
     }
 
 }

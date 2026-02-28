@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TMPro;
 
 public class ResourceManager : MonoBehaviour
@@ -37,6 +37,7 @@ public class ResourceManager : MonoBehaviour
         if (goldText != null)
         {
             goldText.text = $"{currentGold:N0} G"; // :N0 คือใส่ลูกน้ำให้ด้วย (เช่น 1,000)
+            GlobalQuestState.ApplyLanguageFont(goldText);
         }
     }
 }
