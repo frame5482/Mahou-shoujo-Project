@@ -176,7 +176,7 @@ public class StoryFlowController : MonoBehaviour
                 if (!string.IsNullOrEmpty(option.skillNeed) && !participatingCharacter.HasSkill(option.skillNeed))
                 {
                     passCondition = false;
-                    reason += $"(ขาดสกิล {option.skillNeed})";
+                    reason += $"(ขาดสกิล {option.skillNeed})"; 
                 }
             }
             else
