@@ -15,6 +15,12 @@ public class QuestData : ScriptableObject
     [Header("--- ข้อมูลทั่วไปของภารกิจ ---")]
     public string questName; // ชื่อเควสเอาไว้อ่านเอง
     [TextArea] public string questDescription;
+    [Tooltip("รูปภาพสำหรับแสดงใน Questpaper (ถ้าว่างจะไม่แสดงรูป)")]
+    public Sprite questImage;
+
+    [Header("--- ซีนที่โหลดเมื่อเริ่มเควส ---")]
+    [Tooltip("ใช้เมื่อเป็น Story; ถ้าว่างจะเล่นในฉากเดิม. Battle ใช้ battleConfig.battleSceneName")]
+    public string sceneToLoad;
 
     [Header("--- ประเภทเควส ---")]
     [Tooltip("Story = เรื่องราว/บทสนทนา | Battle = ต่อสู้ (เสกผู้เล่น+มอนสเตอร์)")]

@@ -29,6 +29,20 @@ public class QuestManager : MonoBehaviour
     [Tooltip("ขนาดปุ่ม (ถ้าเป็น 0 จะใช้ขนาดจากรูปภาพ)")]
     public float buttonSize = 200f;
 
+    [Header("--- 📜 Questpaper (แผ่นเควส) ---")]
+    [Tooltip("Prefab ของแผ่นเควส ต้องมี QuestPaperItem (รูป ชื่อ รายละเอียด)")]
+    public GameObject questPaperPrefab;
+    [Tooltip("จุดที่เสก Questpaper (เช่น Content ของ Scroll View)")]
+    public Transform questPaperContainer;
+    [Tooltip("Panel รายละเอียดเควสเมื่อกดเลือก (ชื่อ รายละเอียด รูป + ปุ่มส่งตัวละคร)")]
+    public GameObject questDetailPanel;
+    public TextMeshProUGUI detailQuestNameText;
+    public TextMeshProUGUI detailQuestDescriptionText;
+    public Image detailQuestImage;
+
+    int _selectedQuestIndexForDetail = -1;
+    QuestData _selectedQuestDataForDetail;
+
     void Start()
     {
         GlobalQuestState.LoadState(); // ดึงที่เซฟไว้มาบอกว่าตอนนี้อยู่บทไหน เควสที่เท่าไหร่
@@ -46,6 +60,21 @@ public class QuestManager : MonoBehaviour
         var route = storyProgressData.routes[ch];
         if (route?.exclusiveQuestList == null) return null;
         return new List<QuestData>(route.exclusiveQuestList);
+    }
+
+    /// <summary> รายการเควสที่ยังไม่สำเร็จ (index, QuestData) สำหรับแสดงใน Questpaper </summary>
+    List<(int index, QuestData data)> GetAvailableQuestList()
+    {
+        var full = GetCurrentChapterQuestList();
+        if (full == null || full.Count == 0) return new List<(int, QuestData)>();
+        var completed = GlobalQuestState.GetCompletedQuestIndicesForChapter(GlobalQuestState.CurrentChapter);
+        var result = new List<(int, QuestData)>();
+        for (int i = 0; i < full.Count; i++)
+        {
+            if (!completed.Contains(i))
+                result.Add((i, full[i]));
+        }
+        return result;
     }
 
     /// <summary> ดึงรายการเควสของตัวละครที่เลือก (จาก StoryProgressData.routes ที่ targetCharacter ตรง) </summary>
@@ -76,14 +105,67 @@ public class QuestManager : MonoBehaviour
 
     public void OpenQuestBoard()
     {
-        characterSelectionPanel.SetActive(true);
+        _selectedQuestDataForDetail = null;
+        _selectedQuestIndexForDetail = -1;
+        if (questDetailPanel != null) questDetailPanel.SetActive(false);
+
+        // เสก Questpaper ถ้ามี Prefab + Container
+        if (questPaperPrefab != null && questPaperContainer != null && UseStoryProgress())
+        {
+            foreach (Transform child in questPaperContainer) Destroy(child.gameObject);
+            var available = GetAvailableQuestList();
+            foreach (var (index, data) in available)
+            {
+                var go = Instantiate(questPaperPrefab, questPaperContainer);
+                var paper = go.GetComponent<QuestPaperItem>();
+                if (paper != null) paper.Setup(this, data, index);
+            }
+            // แสดงเฉพาะรายการเควสก่อน ไม่เปิด panel เลือกตัวละครจนกว่าจะกดเลือกเควส
+            if (characterSelectionPanel != null) characterSelectionPanel.SetActive(false);
+        }
+        else
+        {
+            if (characterSelectionPanel != null) characterSelectionPanel.SetActive(true);
+        }
 
         QuestData previewQuest = UseStoryProgress() ? GetQuestAtCurrentPosition() : storyFlowController.GetDefaultQuest(currentGlobalQuestIndex);
-        if (previewQuest != null)
+        if (questDescriptionText != null && previewQuest != null)
+        {
             questDescriptionText.text = previewQuest.questDescription;
-        GlobalQuestState.ApplyLanguageFont(questDescriptionText);
-        print("GenerateCharacterButtons");
+            GlobalQuestState.ApplyLanguageFont(questDescriptionText);
+        }
         GenerateCharacterButtons();
+    }
+
+    /// <summary> เปิดรายละเอียดเควสที่กดเลือก (แสดงชื่อ รายละเอียด รูป + ปุ่มส่งตัวละคร) </summary>
+    public void OpenQuestDetail(QuestData questData, int questIndex)
+    {
+        _selectedQuestDataForDetail = questData;
+        _selectedQuestIndexForDetail = questIndex;
+
+        if (detailQuestNameText != null && questData != null)
+        {
+            detailQuestNameText.text = questData.questName;
+            GlobalQuestState.ApplyLanguageFont(detailQuestNameText);
+        }
+        if (detailQuestDescriptionText != null && questData != null)
+        {
+            detailQuestDescriptionText.text = questData.questDescription;
+            GlobalQuestState.ApplyLanguageFont(detailQuestDescriptionText);
+        }
+        if (detailQuestImage != null)
+        {
+            if (questData != null && questData.questImage != null)
+            {
+                detailQuestImage.sprite = questData.questImage;
+                detailQuestImage.gameObject.SetActive(true);
+            }
+            else
+                detailQuestImage.gameObject.SetActive(false);
+        }
+
+        if (questDetailPanel != null) questDetailPanel.SetActive(true);
+        if (characterSelectionPanel != null) characterSelectionPanel.SetActive(true);
     }
 
     void GenerateCharacterButtons()
@@ -165,53 +247,60 @@ public class QuestManager : MonoBehaviour
     }
 
     // 🌟 เมื่อตัดสินใจเลือกหมากตัวใดตัวหนึ่ง 🌟
-    // 🌟 เมื่อตัดสินใจเลือกหมากตัวใดตัวหนึ่ง 🌟
     void OnCharacterSelected(CharacterData selectedChar)
     {
         Debug.Log($"[QuestManager] ตัดสินใจส่ง: {selectedChar.characterName} เข้าสู่สนามรบ!");
 
-        // ส่งรายการเควสของตัวละครที่เลือก (จาก StoryProgressData) เพื่อให้ข้อความเควสเปลี่ยนตามตัวละคร
-        var questList = UseStoryProgress() ? GetQuestListForCharacter(selectedChar) : null;
-        if (questList == null && UseStoryProgress())
-            questList = GetCurrentChapterQuestList(); // ถ้าไม่มี route ตรงตัวละคร ใช้บทปัจจุบัน
-        storyFlowController.SetCharacter(selectedChar, questList);
+        int index;
+        QuestData activeQuest;
 
-        int index = GetCurrentQuestIndex();
-        QuestData activeQuest = storyFlowController.GetActiveQuest(index);
-
-        // อัปเดตข้อความเควสจากรายการที่ส่งไป (หรือจาก activeQuest) ให้เปลี่ยนเมื่อเลือกตัวละคร
-        if (questDescriptionText != null)
+        if (_selectedQuestDataForDetail != null && _selectedQuestIndexForDetail >= 0)
         {
-            if (questList != null && index >= 0 && index < questList.Count)
-                questDescriptionText.text = questList[index].questDescription;
-            else if (activeQuest != null)
-                questDescriptionText.text = activeQuest.questDescription;
-            GlobalQuestState.ApplyLanguageFont(questDescriptionText);
-        }
-
-        // 5. เลือกประเภทเควส: เรื่องราว หรือ ต่อสู้ (ฉบับข้ามมิติ!)
-        if (activeQuest != null && activeQuest.questType == QuestType.Battle)
-        {
-            // 🕊️ ฝากความทรงจำไว้ที่ผู้ส่งสาร ก่อนมิติจะพังทลาย!
-            GlobalQuestState.ActiveQuest = activeQuest;
-            GlobalQuestState.SelectedCharacter = selectedChar;
-
-            // 🌌 ร่ายเวทเปิดประตูมิติ! (ดึงชื่อ Scene จากคัมภีร์ QuestData)
-            string sceneName = activeQuest.battleConfig.battleSceneName;
-
-            if (!string.IsNullOrEmpty(sceneName))
-            {
-                Debug.Log($"[QuestManager] 🌌 กำลังเปิดประตูมิติ ส่งกองทัพไปยังสมรภูมิ: {sceneName}");
-                SceneManager.LoadScene(sceneName); // โหลดฉากใหม่ทันที!
-            }
-            else
-            {
-                Debug.LogError("❌ [QuestManager] นายท่านลืมใส่ชื่อ Scene ใน Battle Config หรือเปล่าขอรับ!?");
-            }
+            index = _selectedQuestIndexForDetail;
+            activeQuest = _selectedQuestDataForDetail;
+            GlobalQuestState.CurrentQuestIndex = index;
         }
         else
         {
-            storyFlowController.StartQuest(index);
+            index = GetCurrentQuestIndex();
+            activeQuest = UseStoryProgress() ? GetQuestAtCurrentPosition() : storyFlowController.GetActiveQuest(index);
+        }
+
+        var questList = UseStoryProgress() ? GetQuestListForCharacter(selectedChar) : null;
+        if (questList == null && UseStoryProgress())
+            questList = GetCurrentChapterQuestList();
+        storyFlowController.SetCharacter(selectedChar, questList);
+
+        if (questDescriptionText != null && activeQuest != null)
+        {
+            questDescriptionText.text = activeQuest.questDescription;
+            GlobalQuestState.ApplyLanguageFont(questDescriptionText);
+        }
+
+        if (activeQuest != null && activeQuest.questType == QuestType.Battle)
+        {
+            GlobalQuestState.ActiveQuest = activeQuest;
+            GlobalQuestState.SelectedCharacter = selectedChar;
+            string sceneName = activeQuest.battleConfig != null ? activeQuest.battleConfig.battleSceneName : "";
+            if (!string.IsNullOrEmpty(sceneName))
+            {
+                Debug.Log($"[QuestManager] 🌌 กำลังเปิดประตูมิติ ส่งกองทัพไปยังสมรภูมิ: {sceneName}");
+                SceneManager.LoadScene(sceneName);
+            }
+            else
+                Debug.LogError("❌ [QuestManager] นายท่านลืมใส่ชื่อ Scene ใน Battle Config หรือเปล่าขอรับ!?");
+        }
+        else
+        {
+            if (activeQuest != null && !string.IsNullOrEmpty(activeQuest.sceneToLoad))
+            {
+                GlobalQuestState.ActiveQuest = activeQuest;
+                GlobalQuestState.SelectedCharacter = selectedChar;
+                Debug.Log($"[QuestManager] 🌌 โหลดซีนคุย: {activeQuest.sceneToLoad}");
+                SceneManager.LoadScene(activeQuest.sceneToLoad);
+            }
+            else
+                storyFlowController.StartQuest(index);
         }
     }
 
@@ -219,12 +308,13 @@ public class QuestManager : MonoBehaviour
     {
         if (UseStoryProgress())
         {
+            int completedIndex = GlobalQuestState.CurrentQuestIndex;
+            GlobalQuestState.MarkQuestCompleted(GlobalQuestState.CurrentChapter, completedIndex);
+
             var list = GetCurrentChapterQuestList();
-            if (list != null && GlobalQuestState.CurrentQuestIndex < list.Count - 1)
-            {
-                GlobalQuestState.CurrentQuestIndex++;
-            }
-            else
+            var completed = GlobalQuestState.GetCompletedQuestIndicesForChapter(GlobalQuestState.CurrentChapter);
+            bool allDone = list != null && completed.Count >= list.Count;
+            if (allDone)
             {
                 GlobalQuestState.CurrentChapter++;
                 GlobalQuestState.CurrentQuestIndex = 0;
@@ -234,9 +324,8 @@ public class QuestManager : MonoBehaviour
             GlobalQuestState.SaveState();
         }
         else
-        {
             currentGlobalQuestIndex++;
-        }
+
         OpenQuestBoard();
     }
 }

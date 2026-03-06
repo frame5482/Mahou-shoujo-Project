@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4fb7ba7d0cadf545b94d17e2627777f, type: 3}
   m_Name: 1
   m_EditorClassIdentifier: Assembly-CSharp::QuestData
-  questName: 
-  questDescription: 
+  questName: DDDDD
+  questDescription: aAAA
+  questImage: {fileID: 0}
+  sceneToLoad: Talk
   questType: 0
   storyFlow:
   - stepName: WWWWW

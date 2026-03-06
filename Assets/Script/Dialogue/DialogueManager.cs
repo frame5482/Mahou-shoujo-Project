@@ -64,7 +64,7 @@ public class DialogueManager : MonoBehaviour
         ThaiGameObject = ThaidialogueText.gameObject;
         ENGGameObject = ENGdialogueText.gameObject;
     }
-    // 2. ??? OnNextButtonPressed ?
+    // 2. ï¿½ï¿½??ï¿½ï¿½? OnNextButtonPressed ï¿½?ï¿½ï¿½ï¿½
 
     public void OnNextButtonPressed()
     {
@@ -76,21 +76,21 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            // --- ?ç ---
-            // ???? ( ? StoryFlowController)
+            // --- ï¿½ï¿½?çï¿½ ---
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½??ï¿½??ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½?ï¿½ StoryFlowController)
             if (onDialogueFinished != null)
             {
-                // ? "!"
+                // ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½!"
                 onDialogueFinished.Invoke();
 
-                // ?? ???
+                // ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 onDialogueFinished = null;
                 Debug.Log("chane of Dialogu");
 
             }
             else
             {
-                // ä (?) ? Scene ???
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä (ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½? Scene ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½
                 LoadScene();
                 Debug.Log("End of Dialogue (Default behavior)");
             }

@@ -178,6 +178,7 @@ public class StoryFlowController : MonoBehaviour
                     passCondition = false;
                     reason += $"(ขาดสกิล {option.skillNeed})"; 
                 }
+
             }
             else
             {

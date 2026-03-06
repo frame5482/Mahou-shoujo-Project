@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 386f5347269383b44aa8dc561a8c36af, type: 3}
   m_Name: LanguageFontSettings
   m_EditorClassIdentifier: Assembly-CSharp::LanguageFontSettings
-  fontEnglish: {fileID: 0}
-  fontThai: {fileID: 0}
-  fontJapanese: {fileID: 0}
+  fontEnglish: {fileID: 11400000, guid: b30e281998b0a954294fe72049fabd30, type: 2}
+  fontThai: {fileID: 11400000, guid: d945d6a6f83e8144c88e83acbce4722b, type: 2}
+  fontJapanese: {fileID: 11400000, guid: b30e281998b0a954294fe72049fabd30, type: 2}

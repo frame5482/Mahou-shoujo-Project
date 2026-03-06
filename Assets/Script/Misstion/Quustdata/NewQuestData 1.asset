@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestData
   questName: AAA
   questDescription: AAAAAAAAAAAAAAA
+  questImage: {fileID: 0}
+  sceneToLoad: Talk
   questType: 0
   storyFlow:
   - stepName: AAAAAA
