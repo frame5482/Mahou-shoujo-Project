@@ -28,6 +28,8 @@ public class GlobalQuestState : MonoBehaviour
 
     public static readonly string SetLanguage = "PlayerPrefsSetLanguage";
 
+    public bool isResetStory;
+
     const string KeyChapter = "QuestState_Chapter";
     const string KeyQuestIndex = "QuestState_QuestIndex";
     const string KeyCompletedPrefix = "QuestState_Completed_";
@@ -41,6 +43,14 @@ public class GlobalQuestState : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        if (isResetStory == true)
+        {
+            currentChapter = 0;
+            currentQuestIndex = 0;
+            SaveState();
+        }
+
     }
 
     void OnDestroy()

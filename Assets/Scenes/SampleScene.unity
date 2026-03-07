@@ -668,34 +668,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 534329623}
-  - component: {fileID: 534329622}
-  - component: {fileID: 534329624}
   - component: {fileID: 534329625}
   m_Layer: 0
-  m_Name: MANAGER
+  m_Name: GlobalMANAGER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &534329622
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 534329621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2171dd15a2e52e54fb9e544780385f18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BattleQuestController
-  playerSpawnPoint: {fileID: 0}
-  monsterSpawnPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  player: {fileID: 0}
 --- !u!4 &534329623
 Transform:
   m_ObjectHideFlags: 0
@@ -711,19 +691,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &534329624
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 534329621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d10ebc3b9e1f964199c959d9fd9f7f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LanguageFontBootstrap
-  fontSettings: {fileID: 11400000, guid: fc523387b52ba304a8bd2c66985a970b, type: 2}
 --- !u!114 &534329625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -739,9 +706,10 @@ MonoBehaviour:
   activeQuest: {fileID: 0}
   selectedCharacter: {fileID: 0}
   currentChapter: 1
-  currentQuestIndex: 0
+  currentQuestIndex: 1
   currentLanguage: 0
   fontSettings: {fileID: 11400000, guid: fc523387b52ba304a8bd2c66985a970b, type: 2}
+  isResetStory: 0
 --- !u!1 &640428898
 GameObject:
   m_ObjectHideFlags: 0
@@ -1834,6 +1802,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1972479188}
   - component: {fileID: 1972479187}
+  - component: {fileID: 1972479189}
   m_Layer: 0
   m_Name: Gamemanager
   m_TagString: Untagged
@@ -1871,6 +1840,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1972479189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972479186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2171dd15a2e52e54fb9e544780385f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleQuestController
+  playerSpawnPoint: {fileID: 0}
+  monsterSpawnPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  player: {fileID: 0}
 --- !u!1001 &115098662305358401
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -34,6 +34,7 @@ public class StoryFlowController : MonoBehaviour
     private int currentQuestIndex = 0;
     private int currentStepIndex = 0;
     private QuestData currentQuest;
+    private List<StoryStep> _activeStoryFlow; // บทสนทนาตามตัวละครที่เลือก (จาก QuestData.characterStoryFlows)
 
     void Start()
     {
@@ -103,6 +104,7 @@ public class StoryFlowController : MonoBehaviour
         currentQuestIndex = questIndex;
         currentQuest = activeQuestList[currentQuestIndex];
         currentStepIndex = 0;
+        _activeStoryFlow = currentQuest != null ? currentQuest.GetStoryFlowForCharacter(participatingCharacter) : null;
 
         Debug.Log($"⚔️ [StoryFlow] เริ่มภารกิจ: {currentQuest.questName}");
         ProcessCurrentStep();
@@ -110,8 +112,15 @@ public class StoryFlowController : MonoBehaviour
 
     void ProcessCurrentStep()
     {
+        if (_activeStoryFlow == null || _activeStoryFlow.Count == 0)
+        {
+            Debug.LogWarning($"⚠️ [StoryFlow] ไม่มี storyFlow สำหรับตัวละคร {participatingCharacter?.characterName} ในเควส {currentQuest?.questName} — ข้ามจบเควส");
+            var qm = FindAnyObjectByType<QuestManager>();
+            if (qm != null) qm.OnQuestCompleted();
+            return;
+        }
         // เช็คว่าจบทุกเหตุการณ์ (Step) ในเควสปัจจุบันหรือยัง?
-        if (currentStepIndex >= currentQuest.storyFlow.Count)
+        if (currentStepIndex >= _activeStoryFlow.Count)
         {
             Debug.Log($"✅ [StoryFlow] ภารกิจ {currentQuest.questName} เสร็จสิ้นลงแล้ว!");
 
@@ -125,7 +134,7 @@ public class StoryFlowController : MonoBehaviour
             return;
         }
 
-        StoryStep currentStep = currentQuest.storyFlow[currentStepIndex];
+        StoryStep currentStep = _activeStoryFlow[currentStepIndex];
 
         if (currentStep.options.Count == 0)
         {

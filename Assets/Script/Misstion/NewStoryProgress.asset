@@ -13,11 +13,10 @@ MonoBehaviour:
   m_Name: NewStoryProgress
   m_EditorClassIdentifier: Assembly-CSharp::StoryProgressData
   routes:
-  - targetCharacter: {fileID: 11400000, guid: 0ad97346535f5aa4d8a6bfb5d19ad2f7, type: 2}
+  - chapterNumber: 0
     exclusiveQuestList:
     - {fileID: 11400000, guid: 81e28ef61ca103c4a8ddf0b808d169af, type: 2}
-    - {fileID: 11400000, guid: 6c4521d6e0dc9cd4c983619d0f1556bd, type: 2}
-  - targetCharacter: {fileID: 11400000, guid: 73e4bac66212e324b84600228f4e15d4, type: 2}
+  - chapterNumber: 1
     exclusiveQuestList:
     - {fileID: 11400000, guid: 6c4521d6e0dc9cd4c983619d0f1556bd, type: 2}
     - {fileID: 11400000, guid: 81e28ef61ca103c4a8ddf0b808d169af, type: 2}

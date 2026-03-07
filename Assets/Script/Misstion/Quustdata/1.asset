@@ -17,31 +17,49 @@ MonoBehaviour:
   questImage: {fileID: 0}
   sceneToLoad: Talk
   questType: 0
-  storyFlow:
-  - stepName: WWWWW
-    options:
-    - buttonText: WWWWW
-      targetTextbase: {fileID: 11400000, guid: 9b1c38d93103ebd47a8631457a71b545, type: 2}
-      rewardGold: 0
-      reqHP: 0
-      reqVIT: 0
-      reqSTR: 0
-      reqDEX: 0
-      reqINT: 0
-      reqCHA: 0
-      reqLUCK: 0
-      skillNeed: 
-    - buttonText: WWWWWWWWWWW
-      targetTextbase: {fileID: 11400000, guid: 9b1c38d93103ebd47a8631457a71b545, type: 2}
-      rewardGold: 0
-      reqHP: 0
-      reqVIT: 0
-      reqSTR: 0
-      reqDEX: 0
-      reqINT: 0
-      reqCHA: 0
-      reqLUCK: 0
-      skillNeed: 
+  characterStoryFlows:
+  - character: {fileID: 11400000, guid: 0ad97346535f5aa4d8a6bfb5d19ad2f7, type: 2}
+    storyFlow:
+    - stepName: 0
+      options:
+      - buttonText: AAABBBBB
+        targetTextbase: {fileID: 11400000, guid: 5a30d8f944bcc5e44bfe6065db826606,
+          type: 2}
+        rewardGold: 1000
+        reqHP: 0
+        reqVIT: 0
+        reqSTR: 0
+        reqDEX: 0
+        reqINT: 0
+        reqCHA: 0
+        reqLUCK: 0
+        skillNeed: 
+    - stepName: 1
+      options:
+      - buttonText: 
+        targetTextbase: {fileID: 11400000, guid: 5a30d8f944bcc5e44bfe6065db826606,
+          type: 2}
+        rewardGold: 1000
+        reqHP: 0
+        reqVIT: 0
+        reqSTR: 0
+        reqDEX: 0
+        reqINT: 0
+        reqCHA: 0
+        reqLUCK: 0
+        skillNeed: 
+      - buttonText: AAA
+        targetTextbase: {fileID: 11400000, guid: 96a9df25b3beddf4a8f452194e0bbb45,
+          type: 2}
+        rewardGold: 1000
+        reqHP: 0
+        reqVIT: 0
+        reqSTR: 0
+        reqDEX: 0
+        reqINT: 0
+        reqCHA: 0
+        reqLUCK: 0
+        skillNeed: 
   battleConfig:
     battleSceneName: BattleArena_Forest
     rewardGold: 0

@@ -51,13 +51,23 @@ public class QuestManager : MonoBehaviour
 
     bool UseStoryProgress() => storyProgressData != null && storyProgressData.routes != null && storyProgressData.routes.Count > 0;
 
-    /// <summary> ดึงรายการเควสของบทปัจจุบัน (บทที่ 1 = routes[0], ...) </summary>
-    List<QuestData> GetCurrentChapterQuestList()
+    /// <summary> หา route ที่เลขบทตรงกับ GlobalQuestState.CurrentChapter </summary>
+    StoryChapterRoute GetCurrentChapterRoute()
     {
         if (!UseStoryProgress()) return null;
-        int ch = GlobalQuestState.CurrentChapter - 1;
-        if (ch < 0 || ch >= storyProgressData.routes.Count) return null;
-        var route = storyProgressData.routes[ch];
+        int currentCh = GlobalQuestState.CurrentChapter;
+        foreach (var route in storyProgressData.routes)
+        {
+            if (route != null && route.chapterNumber == currentCh)
+                return route;
+        }
+        return null;
+    }
+
+    /// <summary> ดึงรายการเควสของบทปัจจุบัน (ตามเลขบทที่ GlobalQuestState บันทึกไว้) </summary>
+    List<QuestData> GetCurrentChapterQuestList()
+    {
+        var route = GetCurrentChapterRoute();
         if (route?.exclusiveQuestList == null) return null;
         return new List<QuestData>(route.exclusiveQuestList);
     }
@@ -77,16 +87,10 @@ public class QuestManager : MonoBehaviour
         return result;
     }
 
-    /// <summary> ดึงรายการเควสของตัวละครที่เลือก (จาก StoryProgressData.routes ที่ targetCharacter ตรง) </summary>
+    /// <summary> ดึงรายการเควสของบทปัจจุบัน (บทสนทนาแยกตามตัวละครอยู่ที่ QuestData.characterStoryFlows แล้ว) </summary>
     List<QuestData> GetQuestListForCharacter(CharacterData character)
     {
-        if (!UseStoryProgress() || character == null) return null;
-        foreach (var route in storyProgressData.routes)
-        {
-            if (route != null && route.targetCharacter == character && route.exclusiveQuestList != null)
-                return new List<QuestData>(route.exclusiveQuestList);
-        }
-        return null;
+        return GetCurrentChapterQuestList();
     }
 
     QuestData GetQuestAtCurrentPosition()
@@ -316,10 +320,19 @@ public class QuestManager : MonoBehaviour
             bool allDone = list != null && completed.Count >= list.Count;
             if (allDone)
             {
-                GlobalQuestState.CurrentChapter++;
                 GlobalQuestState.CurrentQuestIndex = 0;
-                int maxCh = storyProgressData.routes != null ? storyProgressData.routes.Count : 1;
-                GlobalQuestState.CurrentChapter = Mathf.Clamp(GlobalQuestState.CurrentChapter, 1, maxCh);
+                var routes = storyProgressData.routes;
+                if (routes != null && routes.Count > 0)
+                {
+                    int idx = -1;
+                    for (int i = 0; i < routes.Count; i++)
+                    {
+                        if (routes[i] != null && routes[i].chapterNumber == GlobalQuestState.CurrentChapter)
+                        { idx = i; break; }
+                    }
+                    if (idx >= 0 && idx + 1 < routes.Count && routes[idx + 1] != null)
+                        GlobalQuestState.CurrentChapter = routes[idx + 1].chapterNumber;
+                }
             }
             GlobalQuestState.SaveState();
         }

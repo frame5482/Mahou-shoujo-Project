@@ -26,9 +26,26 @@ public class QuestData : ScriptableObject
     [Tooltip("Story = เรื่องราว/บทสนทนา | Battle = ต่อสู้ (เสกผู้เล่น+มอนสเตอร์)")]
     public QuestType questType = QuestType.Story;
 
-    [Header("--- ลำดับเหตุการณ์ (Story Flow) ---")]
-    [Tooltip("ใช้เมื่อ questType = Story")]
-    public List<StoryStep> storyFlow; // ลิสต์ของเหตุการณ์ที่จะเกิดขึ้นในเควสนี้
+    [Header("--- ลำดับเหตุการณ์ (Story Flow) ตามตัวละคร ---")]
+    [Tooltip("ใช้เมื่อ questType = Story — เลือกตัวละครไหนจะใช้ storyFlow ของ entry นั้น")]
+    public List<CharacterStoryFlow> characterStoryFlows = new List<CharacterStoryFlow>();
+
+    /// <summary> ดึง storyFlow ที่ตรงกับตัวละคร (ถ้าไม่มีใช้ตัวที่ character เป็น null) </summary>
+    public List<StoryStep> GetStoryFlowForCharacter(CharacterData character)
+    {
+        if (characterStoryFlows == null || characterStoryFlows.Count == 0) return null;
+        foreach (var entry in characterStoryFlows)
+        {
+            if (entry != null && entry.character == character && entry.storyFlow != null)
+                return entry.storyFlow;
+        }
+        foreach (var entry in characterStoryFlows)
+        {
+            if (entry != null && entry.character == null && entry.storyFlow != null)
+                return entry.storyFlow;
+        }
+        return null;
+    }
 
     [Header("--- การตั้งค่าเควสต่อสู้ (Battle) ---")]
     [Tooltip("ใช้เมื่อ questType = Battle")]
@@ -66,6 +83,18 @@ public class MonsterSpawnEntry
 
     [Tooltip("ดัชนีจุดเสก (ตรงกับลำดับใน BattleQuestController.monsterSpawnPoints)")]
     public int spawnPointIndex;
+}
+
+// ---------------------------------------------------------
+// เงื่อนไขตัวละคร + บทสนทนา (ใส่ใน QuestData แทน StoryProgressData)
+// ---------------------------------------------------------
+[System.Serializable]
+public class CharacterStoryFlow
+{
+    [Tooltip("ตัวละครที่ใช้บทสนทนานี้ (ว่าง = ใช้เป็น default เมื่อไม่ตรงตัวอื่น)")]
+    public CharacterData character;
+    [Tooltip("ลำดับเหตุการณ์เมื่อเลือกตัวละครนี้")]
+    public List<StoryStep> storyFlow = new List<StoryStep>();
 }
 
 // ---------------------------------------------------------
