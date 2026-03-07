@@ -436,63 +436,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2300118215765986833, guid: f503ade945681684988b253d9580107e,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1518408011}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f503ade945681684988b253d9580107e, type: 3}
---- !u!1 &1518408009 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2300118215765986833, guid: f503ade945681684988b253d9580107e,
-    type: 3}
-  m_PrefabInstance: {fileID: 1518408008}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1518408010 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1994527740770790027, guid: f503ade945681684988b253d9580107e,
-    type: 3}
-  m_PrefabInstance: {fileID: 1518408008}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1518408009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c26f8257a7eba14aaf8be46439eb792, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StoryFlowController
---- !u!114 &1518408011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1518408009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fd02923fdf248d4983b4c14f25e311a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::QuestManager
-  storyFlowController: {fileID: 1518408010}
-  battleQuestController: {fileID: 0}
-  storyProgressData: {fileID: 11400000, guid: 7bc9caca22fee4a46bbd5af9fad74f5d, type: 2}
-  currentGlobalQuestIndex: 0
-  questDescriptionText: {fileID: 0}
-  characterSelectionPanel: {fileID: 0}
-  availableCharacters:
-  - {fileID: 11400000, guid: 0ad97346535f5aa4d8a6bfb5d19ad2f7, type: 2}
-  - {fileID: 11400000, guid: 73e4bac66212e324b84600228f4e15d4, type: 2}
-  - {fileID: 11400000, guid: b3f0f6f0960429e4f9d234fe71610775, type: 2}
-  - {fileID: 11400000, guid: addc6a6152fc2ae41bcb85b56f903a05, type: 2}
-  characterButtonContainer: {fileID: 0}
-  characterButtonPrefab: {fileID: 0}
-  buttonAnimation: {fileID: 0}
-  buttonSize: 0
-  questPaperPrefab: {fileID: 0}
-  questPaperContainer: {fileID: 0}
-  questDetailPanel: {fileID: 0}
-  detailQuestNameText: {fileID: 0}
-  detailQuestDescriptionText: {fileID: 0}
-  detailQuestImage: {fileID: 0}
 --- !u!1 &1664153633
 GameObject:
   m_ObjectHideFlags: 0

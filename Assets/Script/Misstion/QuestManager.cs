@@ -45,57 +45,87 @@ public class QuestManager : MonoBehaviour
 
     void Start()
     {
-        GlobalQuestState.LoadState(); // ดึงที่เซฟไว้มาบอกว่าตอนนี้อยู่บทไหน เควสที่เท่าไหร่
+        GlobalQuestState.ResetAllQuestProgress(storyProgressData);
+        if (UseStoryProgress() && storyProgressData != null)
+        {
+            GlobalQuestState.StoryProgressData = storyProgressData;
+            GlobalQuestState.LoadState();
+            // โหลดรายชื่อเควสใหม่เฉพาะเมื่อ list ว่าง (ขึ้นบทหรือเพิ่งเริ่ม) — ไม่รีเซ็ตทุกครั้งที่เข้าซีน ไม่งั้นเควสที่ทำแล้วจะกลับมา
+            if (GlobalQuestState.ListQuestCount == 0)
+                GlobalQuestState.ReloadQuestListFromStoryProgressData();
+        }
+        else
+            GlobalQuestState.LoadState();
+        OpenQuestBoard();
+    }
+
+    /// <summary> เรียกเมื่อกด "เริ่มเกมใหม่" — รีเซ็ตเควสทั้งหมดแล้วไปบทแรก (ให้ปุ่มเมนูหลักเรียก) </summary>
+    public void StartNewGame()
+    {
+        if (!UseStoryProgress() || storyProgressData == null) return;
+        GlobalQuestState.StoryProgressData = storyProgressData;
+        GlobalQuestState.ResetAllQuestProgress(storyProgressData);
+        GlobalQuestState.SetToFirstChapter(storyProgressData);
+        GlobalQuestState.ReloadQuestListFromStoryProgressData();
         OpenQuestBoard();
     }
 
     bool UseStoryProgress() => storyProgressData != null && storyProgressData.routes != null && storyProgressData.routes.Count > 0;
 
-    /// <summary> หา route ที่เลขบทตรงกับ GlobalQuestState.CurrentChapter </summary>
+    /// <summary> หา route ที่เลขบทตรงกับ GlobalQuestState.CurrentChapter ถ้าไม่มีใช้ route แรกที่มีเควส (ไม่ลบรายชื่อเควส) </summary>
     StoryChapterRoute GetCurrentChapterRoute()
     {
         if (!UseStoryProgress()) return null;
         int currentCh = GlobalQuestState.CurrentChapter;
+        StoryChapterRoute fallback = null;
         foreach (var route in storyProgressData.routes)
         {
-            if (route != null && route.chapterNumber == currentCh)
+            if (route == null || route.exclusiveQuestList == null || route.exclusiveQuestList.Count == 0)
+                continue;
+            if (route.chapterNumber == currentCh)
                 return route;
+            if (fallback == null)
+                fallback = route;
         }
-        return null;
+        return fallback;
     }
 
-    /// <summary> ดึงรายการเควสของบทปัจจุบัน (ตามเลขบทที่ GlobalQuestState บันทึกไว้) </summary>
-    List<QuestData> GetCurrentChapterQuestList()
+    /// <summary> รายการเควสที่ยังไม่ทำ — ดึงจาก GlobalQuestState (ที่เก็บจาก StoryProgressData) </summary>
+    List<(int index, QuestData data)> GetAvailableQuestList()
+    {
+        if (UseStoryProgress())
+            return GlobalQuestState.GetAvailableQuestList();
+        var full = GetCurrentChapterQuestListLegacy();
+        if (full == null || full.Count == 0) return new List<(int, QuestData)>();
+        var completed = GlobalQuestState.GetCompletedQuestIndicesForChapter(GlobalQuestState.CurrentChapter);
+        var result = new List<(int, QuestData)>();
+        for (int i = 0; i < full.Count; i++)
+        {
+            if (!completed.Contains(i)) result.Add((i, full[i]));
+        }
+        return result;
+    }
+
+    List<QuestData> GetCurrentChapterQuestListLegacy()
     {
         var route = GetCurrentChapterRoute();
         if (route?.exclusiveQuestList == null) return null;
         return new List<QuestData>(route.exclusiveQuestList);
     }
 
-    /// <summary> รายการเควสที่ยังไม่สำเร็จ (index, QuestData) สำหรับแสดงใน Questpaper </summary>
-    List<(int index, QuestData data)> GetAvailableQuestList()
-    {
-        var full = GetCurrentChapterQuestList();
-        if (full == null || full.Count == 0) return new List<(int, QuestData)>();
-        var completed = GlobalQuestState.GetCompletedQuestIndicesForChapter(GlobalQuestState.CurrentChapter);
-        var result = new List<(int, QuestData)>();
-        for (int i = 0; i < full.Count; i++)
-        {
-            if (!completed.Contains(i))
-                result.Add((i, full[i]));
-        }
-        return result;
-    }
-
-    /// <summary> ดึงรายการเควสของบทปัจจุบัน (บทสนทนาแยกตามตัวละครอยู่ที่ QuestData.characterStoryFlows แล้ว) </summary>
+    /// <summary> รายการเควสของบทปัจจุบัน — ให้ StoryFlowController ใช้ (ดึงจาก GlobalQuestState) </summary>
     List<QuestData> GetQuestListForCharacter(CharacterData character)
     {
-        return GetCurrentChapterQuestList();
+        if (UseStoryProgress())
+            return GlobalQuestState.GetCurrentChapterQuestDataList();
+        return GetCurrentChapterQuestListLegacy();
     }
 
     QuestData GetQuestAtCurrentPosition()
     {
-        var list = GetCurrentChapterQuestList();
+        if (UseStoryProgress())
+            return GlobalQuestState.GetCurrentSelectedQuest();
+        var list = GetCurrentChapterQuestListLegacy();
         int idx = GlobalQuestState.CurrentQuestIndex;
         if (list == null || idx < 0 || idx >= list.Count) return null;
         return list[idx];
@@ -112,10 +142,12 @@ public class QuestManager : MonoBehaviour
         _selectedQuestDataForDetail = null;
         _selectedQuestIndexForDetail = -1;
         if (questDetailPanel != null) questDetailPanel.SetActive(false);
+        // ใช้ listQuest จาก GlobalQuestState โดยตรง — เรียกรายชื่อใหม่เฉพาะเมื่อขึ้นบทหรือเควสเหลือ 0
 
         // เสก Questpaper ถ้ามี Prefab + Container
         if (questPaperPrefab != null && questPaperContainer != null && UseStoryProgress())
         {
+            // ลบเฉพาะ UI เก่า (แผ่นเควสที่เคยเสก) ไม่ได้ลบรายชื่อเควสจากข้อมูล — รายชื่อมาจาก GetAvailableQuestList() ด้านล่าง
             foreach (Transform child in questPaperContainer) Destroy(child.gameObject);
             var available = GetAvailableQuestList();
             foreach (var (index, data) in available)
@@ -271,8 +303,8 @@ public class QuestManager : MonoBehaviour
         }
 
         var questList = UseStoryProgress() ? GetQuestListForCharacter(selectedChar) : null;
-        if (questList == null && UseStoryProgress())
-            questList = GetCurrentChapterQuestList();
+        if (questList == null)
+            questList = UseStoryProgress() ? GlobalQuestState.GetCurrentChapterQuestDataList() : GetCurrentChapterQuestListLegacy();
         storyFlowController.SetCharacter(selectedChar, questList);
 
         if (questDescriptionText != null && activeQuest != null)
@@ -312,15 +344,8 @@ public class QuestManager : MonoBehaviour
     {
         if (UseStoryProgress())
         {
-            int completedIndex = GlobalQuestState.CurrentQuestIndex;
-            GlobalQuestState.MarkQuestCompleted(GlobalQuestState.CurrentChapter, completedIndex);
-
-            var list = GetCurrentChapterQuestList();
-            var completed = GlobalQuestState.GetCompletedQuestIndicesForChapter(GlobalQuestState.CurrentChapter);
-            bool allDone = list != null && completed.Count >= list.Count;
-            if (allDone)
+            if (GlobalQuestState.GetAvailableQuestList().Count == 0)
             {
-                GlobalQuestState.CurrentQuestIndex = 0;
                 var routes = storyProgressData.routes;
                 if (routes != null && routes.Count > 0)
                 {
@@ -331,10 +356,14 @@ public class QuestManager : MonoBehaviour
                         { idx = i; break; }
                     }
                     if (idx >= 0 && idx + 1 < routes.Count && routes[idx + 1] != null)
+                    {
                         GlobalQuestState.CurrentChapter = routes[idx + 1].chapterNumber;
+                        GlobalQuestState.CurrentQuestIndex = 0;
+                        GlobalQuestState.ReloadQuestListFromStoryProgressData();
+                        GlobalQuestState.SaveState();
+                    }
                 }
             }
-            GlobalQuestState.SaveState();
         }
         else
             currentGlobalQuestIndex++;

@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using TMPro;
 
@@ -38,11 +38,48 @@ public class StoryFlowController : MonoBehaviour
 
     void Start()
     {
-        // 🛑 ปลดชนวน! ไม่ให้มันเริ่มทำงานเองใน Start อีกต่อไป
-        // มันจะหลับใหลจนกว่า QuestManager จะเป็นคนปลุกขึ้นมาสั่งการ!
+        // ถ้ามี activeQuest ใน GlobalQuestState ให้เริ่มเล่นบทสนทนาจากนั้นเลย (ไม่ต้องรอ QuestManager)
+        if (GlobalQuestState.ActiveQuest != null)
+            StartFromGlobalState();
     }
 
-    /// <summary> ใส่ defaultQuestListForChapter = รายการเควสของบทปัจจุบัน (จาก StoryProgressData + GlobalQuestState) </summary>
+    /// <summary> ดึงเควสที่ต้องพูดมาจาก GlobalQuestState.ActiveQuest + SelectedCharacter แล้วเริ่มเล่น — ใช้ได้โดยไม่ต้องมี QuestManager ในซีน </summary>
+    public void StartFromGlobalState()
+    {
+        QuestData quest = GlobalQuestState.ActiveQuest;
+        CharacterData character = GlobalQuestState.SelectedCharacter;
+        if (quest == null)
+        {
+            Debug.LogWarning("⚠️ [StoryFlow] GlobalQuestState.ActiveQuest เป็น null — ไม่มีเควสที่จะเล่น");
+            return;
+        }
+        participatingCharacter = character;
+        currentQuest = quest;
+        currentStepIndex = 0;
+        _activeStoryFlow = currentQuest.GetStoryFlowForCharacter(participatingCharacter);
+        if (_activeStoryFlow == null || _activeStoryFlow.Count == 0)
+        {
+            Debug.LogWarning($"⚠️ [StoryFlow] ไม่มี storyFlow สำหรับตัวละคร {participatingCharacter?.characterName} ในเควส {currentQuest.questName}");
+            NotifyQuestCompleted();
+            return;
+        }
+        Debug.Log($"⚔️ [StoryFlow] เริ่มภารกิจจาก GlobalQuestState: {currentQuest.questName}");
+        ProcessCurrentStep();
+    }
+
+    /// <summary> เมื่อจบเควส — ลบเควสนั้นออกจาก list แล้วโหลดซีนหน้าเควสหลัก (หรือ refresh ถ้าอยู่ซีนเดียวกับ QuestManager) </summary>
+    void NotifyQuestCompleted()
+    {
+        GlobalQuestState.RemoveQuestCompleted(GlobalQuestState.CurrentQuestIndex);
+
+        var qm = FindAnyObjectByType<QuestManager>();
+        if (qm != null)
+            qm.OnQuestCompleted();
+        else if (!string.IsNullOrEmpty(GlobalQuestState.MainQuestSceneName))
+            SceneManager.LoadScene(GlobalQuestState.MainQuestSceneName);
+    }
+
+    /// <summary> ใส่ defaultQuestListForChapter = รายการเควสของบทปัจจุบัน (จาก StoryProgressData + GlobalQuestState) — ใช้เมื่อมี QuestManager ในซีน </summary>
     public void SetCharacter(CharacterData newChar, List<QuestData> defaultQuestListForChapter = null)
     {
         _injectedQuestList = defaultQuestListForChapter;
@@ -86,25 +123,24 @@ public class StoryFlowController : MonoBehaviour
         }
     }
 
-    // QuestManager จะเรียกฟังก์ชันนี้เพื่อเข้าสู่สนามรบ
+    // QuestManager จะเรียกฟังก์ชันนี้ — ดึงเควสปัจจุบันที่เลือกจาก GlobalQuestState ไปเล่น
     public void StartQuest(int questIndex)
     {
-        if (activeQuestList == null || activeQuestList.Count == 0)
+        QuestData questToPlay = GlobalQuestState.GetCurrentSelectedQuest();
+        if (questToPlay == null && activeQuestList != null && questIndex >= 0 && questIndex < activeQuestList.Count)
+            questToPlay = activeQuestList[questIndex];
+
+        if (questToPlay == null)
         {
-            Debug.LogError("⚠️ [StoryFlow] คัมภีร์ว่างเปล่า! ท่านลืมใส่ QuestData ใน Inspector หรือเปล่า?");
+            Debug.LogError("⚠️ [StoryFlow] ไม่มีเควสที่เลือก! ดึงจาก GlobalQuestState หรือ activeQuestList ไม่ได้");
             return;
         }
 
-        if (questIndex >= activeQuestList.Count)
-        {
-            Debug.Log("🎉 [StoryFlow] จบทุกภารกิจในคลังคัมภีร์แล้ว!");
-            return;
-        }
-
-        currentQuestIndex = questIndex;
-        currentQuest = activeQuestList[currentQuestIndex];
+        if (activeQuestList != null && questIndex >= 0 && questIndex < activeQuestList.Count)
+            currentQuestIndex = questIndex;
+        currentQuest = questToPlay;
         currentStepIndex = 0;
-        _activeStoryFlow = currentQuest != null ? currentQuest.GetStoryFlowForCharacter(participatingCharacter) : null;
+        _activeStoryFlow = currentQuest.GetStoryFlowForCharacter(participatingCharacter);
 
         Debug.Log($"⚔️ [StoryFlow] เริ่มภารกิจ: {currentQuest.questName}");
         ProcessCurrentStep();
@@ -115,22 +151,13 @@ public class StoryFlowController : MonoBehaviour
         if (_activeStoryFlow == null || _activeStoryFlow.Count == 0)
         {
             Debug.LogWarning($"⚠️ [StoryFlow] ไม่มี storyFlow สำหรับตัวละคร {participatingCharacter?.characterName} ในเควส {currentQuest?.questName} — ข้ามจบเควส");
-            var qm = FindAnyObjectByType<QuestManager>();
-            if (qm != null) qm.OnQuestCompleted();
+            NotifyQuestCompleted();
             return;
         }
-        // เช็คว่าจบทุกเหตุการณ์ (Step) ในเควสปัจจุบันหรือยัง?
         if (currentStepIndex >= _activeStoryFlow.Count)
         {
             Debug.Log($"✅ [StoryFlow] ภารกิจ {currentQuest.questName} เสร็จสิ้นลงแล้ว!");
-
-            // 🔄 แจ้ง QuestManager ว่าจบแล้ว เพื่อให้เปิดหน้าต่างเลือกตัวละครสำหรับเควสต่อไป
-            QuestManager questManager = FindAnyObjectByType<QuestManager>();
-
-            if (questManager != null)
-            {
-                questManager.OnQuestCompleted();
-            }
+            NotifyQuestCompleted();
             return;
         }
 

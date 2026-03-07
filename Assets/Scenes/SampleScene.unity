@@ -705,11 +705,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlobalQuestState
   activeQuest: {fileID: 0}
   selectedCharacter: {fileID: 0}
-  currentChapter: 1
-  currentQuestIndex: 1
+  mainQuestSceneName: SampleScene
+  currentChapter: 0
+  currentQuestIndex: 0
+  storyProgressData: {fileID: 11400000, guid: 460de8e2935dc794ab04471ead112610, type: 2}
   currentLanguage: 0
   fontSettings: {fileID: 11400000, guid: fc523387b52ba304a8bd2c66985a970b, type: 2}
-  isResetStory: 0
+  isResetStory: 1
 --- !u!1 &640428898
 GameObject:
   m_ObjectHideFlags: 0
@@ -2096,7 +2098,7 @@ PrefabInstance:
         type: 3}
       propertyPath: storyProgressData
       value: 
-      objectReference: {fileID: 11400000, guid: 7bc9caca22fee4a46bbd5af9fad74f5d,
+      objectReference: {fileID: 11400000, guid: 460de8e2935dc794ab04471ead112610,
         type: 2}
     - target: {fileID: 4619860263836452478, guid: b6660ae0942515f41912eebf7c657cdb,
         type: 3}
